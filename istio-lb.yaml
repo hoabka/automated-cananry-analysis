@@ -1,0 +1,69 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: sampleapp-gateway
+spec:
+  selector:
+    istio: ingressgateway 
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: sampleapp
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - sampleapp-gateway
+  http:
+  - route:
+    - destination:
+        host: sampleapp
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: sampleapp
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - sampleapp-gateway
+  http:
+  - route:
+    - destination:
+        host: sampleapp
+        subset: v1
+      weight: 80
+    - destination:
+        host: sampleapp
+        subset: baseline
+      weight: 10
+    - destination:
+        host: sampleapp
+        subset: canary
+      weight: 10
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: sampleapp
+spec:
+  host: sampleapp
+  subsets:
+  - name: v1
+    labels:
+      version: prod
+  - name: baseline
+    labels:
+      version: sampleapp-baseline
+  - name: canary
+    labels:
+      version: sampleapp-canary

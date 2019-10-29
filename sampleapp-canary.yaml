@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sampleapp-canary
+  name: sampleapp-canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sampleapp
+      version: sampleapp-canary
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+      labels:
+        app: sampleapp
+        version: sampleapp-canary
+    spec:
+      containers:
+        - env:
+            - name: SUCCESS_RATE
+              valueFrom:
+                configMapKeyRef:
+                  key: SUCCESS_RATE
+                  name: sampleapp-config-canary
+          image: 'gcr.io/spinnaker-marketplace/sampleapp:latest'
+          name: sampleapp-canary
+          ports:
+            - containerPort: 8000
+            - containerPort: 8080

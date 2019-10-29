@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sampleapp
+  name: sampleapp
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: sampleapp
+      version: prod
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: 'true'
+      labels:
+        app: sampleapp
+        version: prod
+    spec:
+      containers:
+        - env:
+            - name: SUCCESS_RATE
+              valueFrom:
+                configMapKeyRef:
+                  key: SUCCESS_RATE
+                  name: sampleapp-config-prod
+          image: 'gcr.io/spinnaker-marketplace/sampleapp:latest'
+          name: sampleapp
+          ports:
+            - containerPort: 8000
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sampleapp
+  name: sampleapp
+spec:
+  ports:
+    - name: metrics
+      port: 8000
+      protocol: TCP
+      targetPort: 8000
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: sampleapp
+  type: ClusterIP
